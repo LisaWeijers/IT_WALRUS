@@ -1,0 +1,55 @@
+Infiltration Threshold Model for WALRUS
+Developed by L.M. Weijers
+Part of the MSc Thesis at Wageningen University and Research with the chairgroup Hydrology and Quantitative Water Management. 
+WALRUS is developed by dr. ir. C.C. Brauer and can be found on: https://github.com/ClaudiaBrauer/WALRUS
+Version 0.1
+Uploaded 9 January 2018
+IT module can be downloaded here: https://github.com/LisaWeijers/IT_WALRUS 
+
+===Module Motivation===
+The intention the the Intensity Threshold Module for WALRUS (IT-model) is to include Hortonian overland flow processes in WALRUS. Hortonian overland flow, or infiltration excess overland flow, is a runoff process which occurs when the infiltration rate is smaller than the rainfall intensity (Horton, 1933). This type of runoff generation may occur in less permeable soils or during high intensity storms (Bierkens et al., 2008). Appels et al. (2016) showed that Hortonian overland flow can occur on field scale in flat terrain, but it occurred in only a small fraction of the rain storms. These rainstorms mainly occurred in summer and early autumn.
+
+While there are physical approaches to model Hortonian overland flow processes (Appels et al., 2016; Bierkens et al., 2008; Hendrinks, 2010; Horton, 1933; Mein and Larson, 1973), the aim of the IT model is to simply test if a Hortonian overland flow process works at all in this scenario. Therefore, a conceptual approach is used. If a simplified Hortonian overland flow improves the model performance, it can be considered to look into a further improvement of the application.
+
+WALRUS is adjusted in the way it divides precipitation that falls on the surface area of the groundwater reservoir. WALRUS divides the land-fraction of rain based on the wetness index. The wetness index (W) is directly related to the storage deficit in the unsaturated zone. A wet unsaturated zone leads to a high wetness index, which makes a larger fraction of the precipitation go to the quickflow reservoir. If the soil is dry and an intense storm occurs, WALRUS will route most water to the soil reservoir because the soil is dry. In this process, there is no check if this infiltration intensity exceeds the infiltration intensity of the soil. Therefore a static intensity threshold (IT) will be applied. When IT is exceeded, all precipitation which exceeds IT will be routed to the quickflow reservoir directly (pT ). All precipitation below IT is divided by W.
+
+===Module process===
+The IT model has an additional step before the wetness index devides water among the quickflow reservoir and the soil reservoir. A check is made that compares the rainfall intensity and the intensity threshold. When the rainfall intensity exceeds the intensity threshold, the excess rainfall is directly sent to the quickflow reservoir (through pT). The remaining rainfall is divided by the wetness index as normal.  
+
+===Hypothetical example===
+For this example assume the following: 
+-Precipitation with an intensity of 10 mm/h 
+-Wetness index of 0.6.
+-Intensity threshold (IT) of 6 mm/h
+Normally 6 mm/h (0.6 * 10 mm/h) would become quickflow and the rest (4 mm/h) goes to the soil reservoir. 
+In the IT module, there is an intensity threshold rate of 6 mm/h. 4 mm/h exceeds the threshold and is transported directly to the quickflow reservoir. The remaining 6 mm/h is divided by W, so another 3.6 mm/h is transported to the
+quickflow reservoir and 2.4 mm/h goes to the soil water reservoir.
+
+===How to use===
+1. Install WALRUS from github.
+2. Copy WALRUS_loop_alt.R and WALRUS_step_alt.R to the R folder in the master folder of WALRUS (WALRUS_loop.R and WALRUS_step should be here)
+3. To run the alternative WALRUS files in the model adjust and run the following lines of code:
+	loop="D:/mod/WALRUS-master/R/WALRUS_loop_alt.R"
+	step="D:/mod/WALRUS-master/R/WALRUS_step_alt.R"
+	defaults="D:/mod/WALRUS-master/R/WALRUS_defaults.R"
+Ensure to change the location to the folder accordingly.
+4. When running a simulation add these lines after preprocessing:
+	source(defaults)
+  	source(loop)
+  	source(step)
+  	source(defaults)
+	pars=data.frame(cW=cQ,cV=cV,cG=cG,cQ=cQ,cS=cS,cD=cD,aS=aS,st=st,IT=IT)
+  	mod      = WALRUS_loop_alt(pars=pars)
+In the parameter argument "pars", the IT parameter is added. Give a value in mm/h. 
+Normal WALRUS can be run by choosing "WALRUS_loop(pars=pars)" 
+
+===Strengths of the IT module=== 
+While the base WALRUS model can model a range of hydrological situations in lowland catchments with success, it was insufficient in modelling the runoff after a short but extremely intense rainfall event. In situations where extreme quantities of perception occurs in a short time, intensity-excess overland flow may occur. This IT module is a crude solution to solve this problem. 
+
+===Weaknesses of the IT module===
+The module is tested and seems stable and numerically correct. However, the module does not truly represent the physical process. As mentioned in the motivation, there are more physical approaches to Hortonian overlandflow. This approach is pragmatic and uncalibrated. 
+This module should only be used when there is a percipitation event of such intensity that the base WALRUS model cannot model the peak properly. 
+
+===Further recommendations===
+-Validating/improving model structure based on physical approaches of Hortonian overlandflow
+-Calibrating the parameter of the module based on soil types and moisture content and the wetness index. 
